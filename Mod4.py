@@ -1,6 +1,6 @@
 import cv2
 from datetime import datetime
-def in_out():
+def Mod4():
     cap = cv2.VideoCapture(0)
 
 
@@ -64,5 +64,3 @@ def in_out():
             cap.release()
             cv2.destroyAllWindows()
             break
-        
-in_out()
