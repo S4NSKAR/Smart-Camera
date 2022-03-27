@@ -1,26 +1,41 @@
 import cv2
-from datetime import datetime
+import imutils
 
-def Mod6():
-    cap = cv2.VideoCapture(0)
+def obj_tracker():
 
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(f'CCTV/{datetime.now().strftime("%y.%m.%d - %H.%M")}.avi', fourcc,20.0,(640,480))
+    # Choosing Camera or video file as input
+	camera=False
+	if camera: 
+		video  = cv2.VideoCapture(0)
+	else:
+		video = cv2.VideoCapture('Media/top.mp4')
+    
+    # Setting up tracker
+	tracker = cv2.TrackerCSRT_create()
+	_,frame = video.read()
+	# Resizing frame
+	frame = imutils.resize(frame, width=720)
+	# Selecting Bounding Box and hide crosshair
+	BB = cv2.selectROI('Choose object to track', frame, False)
+	tracker.init(frame, BB)
 
-    while True:
-        _, frame = cap.read()
+	while True:
+		_,frame = video.read()
+		frame = imutils.resize(frame, width=720)
+		# Update tracking frame
+		track_success, BB = tracker.update(frame)
 
-        cv2.putText(frame, 'RECORDING...', (50,50), cv2.FONT_HERSHEY_COMPLEX,
-                        0.6, (0,0,255), 2)
-        cv2.putText(frame, f'{datetime.now().strftime("%y.%m.%d - %H:%M:%S")}', (50,80), cv2.FONT_HERSHEY_COMPLEX,
-                        0.6, (255,255,255), 2)
+		if track_success:
+			# Find updated tracker location and draw rectangle
+			top_left = (int(BB[0]),int(BB[1]))
+			bottom_right = (int(BB[0]+BB[2]), int(BB[1]+BB[3]))
+			cv2.rectangle(frame,top_left,bottom_right,(0,255,0),5)
 
-        out.write(frame)
-        
+		# Display frame
+		cv2.imshow('Tracking...',frame)
+		key  =  cv2.waitKey(1)
+		if key == 27:
+			break
 
-        cv2.imshow("CCTV", frame)
-
-        if cv2.waitKey(1) == 27:
-            cap.release()
-            cv2.destroyAllWindows()
-            break 
+	video.release()
+	cv2.destroyAllWindows()
